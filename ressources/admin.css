@@ -1,3 +1,8 @@
 #accordion h3 a { text-decoration:none; }
 #accordion label, #advanced-mode-query label { font-weight:700; }
 #accordion label.label-lightbox { font-weight:400; display:block; }
+
+#poststuff .inside p.subtitle-short { font-weight:700; font-size:13px; }
+
+.tax_query_col { float:left; width:48%; display:block; }
+a#add-another-taxo { float:left; margin:10px 0; }

@@ -22,11 +22,9 @@ jQuery(document).ready(function() {
 
 	jQuery("#accordion h3 a").click(function(event) {
 		event.preventDefault();
-		jQuery(event).parent().click();
+		jQuery(this).parent().click();
 	});
 });
-
-
 
 function toggleMode() {
 	jQuery('#simple-mode-query, #advanced-mode-query').removeClass('hide-if-no-js');

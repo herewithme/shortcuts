@@ -159,6 +159,8 @@ class Shortcuts_Admin {
 						echo '<input type="text" class="widefat" id="author_name" name="simple[author_name]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'author_name', true))).'" />' . "\n";
 						echo '<span class="description">' . __('(string) - use \'user_nicename\' (NOT name).', 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
+					
+					echo '<div class="clear"></div>' . "\n";
 				echo '</div>' . "\n";
 				
 				echo '<h3><a href="#">'.__('Category Parameters', 'shortcuts').'</a></h3>' . "\n";
@@ -192,6 +194,8 @@ class Shortcuts_Admin {
 						echo '<input type="text" class="widefat" id="category__not_in" name="simple[category__not_in]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'category__not_in', true))).'" />' . "\n";
 						echo '<span class="description">' . __('(array) - use category id.', 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
+					
+					echo '<div class="clear"></div>' . "\n";
 				echo '</div>' . "\n";
 				
 				echo '<h3><a href="#">'.__('Tag Parameters', 'shortcuts').'</a></h3>' . "\n";
@@ -237,37 +241,66 @@ class Shortcuts_Admin {
 						echo '<input type="text" class="widefat" id="tag_slug__in" name="simple[tag_slug__in]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'tag_slug__in', true))).'" />' . "\n";
 						echo '<span class="description">' . __('(array) - use tag slugs.', 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
+					
+					echo '<div class="clear"></div>' . "\n";
 				echo '</div>' . "\n";
 				
 				echo '<h3><a href="#">'.__('Taxonomy Parameters', 'shortcuts').'</a></h3>' . "\n";
 				echo '<div>' . "\n";
-					echo '<p>' . "\n";
-						echo '<label for="taxonomy">'.__('taxonomy', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="taxonomy" name="simple[tax_query][][taxonomy]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'taxonomy', true))).'" />' . "\n";
-						echo '<span class="description">' . __('(string) - Taxonomy.', 'shortcuts') . '</span>';
-					echo '</p>' . "\n";
-				
-					echo '<p>' . "\n";
-						echo '<label for="field">'.__('field', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="field" name="simple[tax_query][][field]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'field', true))).'" />' . "\n";
-						echo '<span class="description">' . __('field (string) - Select taxonomy term by (\'id\' or \'slug\')', 'shortcuts') . '</span>';
-					echo '</p>' . "\n";
+					$tax_queries = get_post_meta($post->ID, 'tax_query', true);
+					if ( $tax_queries == false ) {
+						$tax_queries = array();
+					}
 					
-					echo '<p>' . "\n";
-						echo '<label for="terms">'.__('terms', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="terms" name="simple[tax_query][][terms]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'terms', true))).'" />' . "\n";
-						echo '<span class="description">' . __('terms (int/string/array) - Taxonomy term(s).', 'shortcuts') . '</span>';
-					echo '</p>' . "\n";
-				
-					echo '<p>' . "\n";
-						echo '<label for="operator">'.__('operator', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="operator" name="simple[tax_query][][operator]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'operator', true))).'" />' . "\n";
-						echo '<span class="description">' . __("operator (string) - Operator to test. Possible values are 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN'.", 'shortcuts') . '</span>';
-					echo '</p>' . "\n";
+					// Always add a empty condition
+					$tax_queries[] = array('taxonomy' => '', 'field' => '', 'terms' => '', 'operator' => '');
 					
-					echo '<span class="description hide-if-js">' . __('You must save for add an another tax query filters.', 'shortcuts') . '</span>';
+					$i = 0;
+					foreach( $tax_queries as $tax_query ) {
+						$i++;
+						echo '<div class="tax_query_col" id="tax_query-'.$i.'">' . "\n";
+							echo '<p class="subtitle-short">' . sprintf( __('Condition %d', 'shortcuts'), $i ) . '</p>' . "\n";
+						
+							echo '<p>' . "\n";
+								echo '<label for="taxonomy">'.__('taxonomy', 'shortcuts').'</label><br />' . "\n";
+								echo '<input type="text" class="widefat" id="taxonomy" name="simple[tax_query][][taxonomy]" value="'.esc_attr(stripslashes($tax_query['taxonomy'])).'" />' . "\n";
+								echo '<span class="description">' . __('(string) - Taxonomy.', 'shortcuts') . '</span>';
+							echo '</p>' . "\n";
+
+							echo '<p>' . "\n";
+								echo '<label for="field">'.__('field', 'shortcuts').'</label><br />' . "\n";
+								echo '<input type="text" class="widefat" id="field" name="simple[tax_query][][field]" value="'.esc_attr(stripslashes($tax_query['field'])).'" />' . "\n";
+								echo '<span class="description">' . __('(string) - Select taxonomy term by (\'id\' or \'slug\')', 'shortcuts') . '</span>';
+							echo '</p>' . "\n";
+
+							echo '<p>' . "\n";
+								echo '<label for="terms">'.__('terms', 'shortcuts').'</label><br />' . "\n";
+								echo '<input type="text" class="widefat" id="terms" name="simple[tax_query][][terms]" value="'.esc_attr(stripslashes($tax_query['terms'])).'" />' . "\n";
+								echo '<span class="description">' . __('(int/string/array) - Taxonomy term(s).', 'shortcuts') . '</span>';
+							echo '</p>' . "\n";
+
+							echo '<p>' . "\n";
+								echo '<label for="operator">'.__('operator', 'shortcuts').'</label><br />' . "\n";
+								echo '<input type="text" class="widefat" id="operator" name="simple[tax_query][][operator]" value="'.esc_attr(stripslashes($tax_query['operator'])).'" />' . "\n";
+								echo '<span class="description">' . __("(string) - Operator to test. Possible values are 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN'.", 'shortcuts') . '</span>';
+							echo '</p>' . "\n";
+						echo '</div>' . "\n";
+					}
+					
+					if ( count($tax_queries) > 1 ) {
+						echo '<p>' . "\n";
+							echo '<label for="relation">'.__('relation', 'shortcuts').'</label><br />' . "\n";
+							echo '<input type="text" class="widefat" id="relation" name="simple[tax_query-relation]" value="'.esc_attr(stripslashes($tax_query['tax_query-relation'])).'" />' . "\n";
+							echo '<span class="description">' . __("(string) - Logical Operators. Possible values are 'OR', 'AND'.", 'shortcuts') . '</span>';
+						echo '</p>' . "\n";
+					}
+					
+					echo '<a href="#" class="button hide-if-no-js" id="add-another-taxo">' . __('Add an another tax query', 'shortcuts') . '</a>';
+					echo '<p class="description hide-if-js">' . __('You must save for add an another tax query filters.', 'shortcuts') . '</p>';
+					
+					echo '<div class="clear"></div>' . "\n";
 				echo '</div>' . "\n";
-		
+				
 				echo '<h3><a href="#">'.__('Post & Page Parameters', 'shortcuts').'</a></h3>' . "\n";
 				echo '<div>' . "\n";
 					echo '<p>' . "\n";
@@ -311,6 +344,8 @@ class Shortcuts_Admin {
 						echo '<input type="text" class="widefat" id="post__not_in" name="simple[post__not_in]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'post__not_in', true))).'" />' . "\n";
 						echo '<span class="description">' . __('(array) - use post ids. Specify post NOT to retrieve.', 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
+					
+					echo '<div class="clear"></div>' . "\n";
 				echo '</div>' . "\n";
 				
 				echo '<h3><a href="#">'.__('Type & Status Parameters', 'shortcuts').'</a></h3>' . "\n";
@@ -331,6 +366,8 @@ class Shortcuts_Admin {
 						}
 						echo '<span class="description">' . __("(string / array) - use post status. Retrieves posts by Post Status, default value is 'publish'", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
+					
+					echo '<div class="clear"></div>' . "\n";
 				echo '</div>' . "\n";
 				
 				echo '<h3><a href="#">'.__('Pagination Parameters', 'shortcuts').'</a></h3>' . "\n";
@@ -356,6 +393,8 @@ class Shortcuts_Admin {
 						echo '<input type="text" class="widefat" id="paged" name="simple[paged]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'paged', true))).'" />' . "\n";
 						echo '<span class="description">' . __('(int) - number of page. Show the posts that would normally show up just on page X when using the "Older Entries" link.', 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
+					
+					echo '<div class="clear"></div>' . "\n";
 				echo '</div>' . "\n";
 				
 				echo '<h3><a href="#">'.__('Offset Parameters', 'shortcuts').'</a></h3>' . "\n";
@@ -365,6 +404,8 @@ class Shortcuts_Admin {
 						echo '<input type="text" class="widefat" id="offset" name="simple[offset]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'offset', true))).'" />' . "\n";
 						echo '<span class="description">' . __("(int) - number of post to displace or pass over.", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
+					
+					echo '<div class="clear"></div>' . "\n";
 				echo '</div>' . "\n";
 				
 				echo '<h3><a href="#">'.__('Order & Orderby Parameters', 'shortcuts').'</a></h3>' . "\n";
@@ -396,6 +437,8 @@ class Shortcuts_Admin {
 						echo '</select>' . "\n";
 						echo '<span class="description">' . __("(string) - Sort retrieved posts by.", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
+					
+					echo '<div class="clear"></div>' . "\n";
 				echo '</div>' . "\n";
 				
 				echo '<h3><a href="#">'.__('Sticky Post Parameters', 'shortcuts').'</a></h3>' . "\n";
@@ -454,6 +497,8 @@ class Shortcuts_Admin {
 						echo '<input type="text" class="widefat" id="second" name="simple[second]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'second', true))).'" />' . "\n";
 						echo '<span class="description">' . __("(int) - Second (0 to 60).", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
+					
+					echo '<div class="clear"></div>' . "\n";
 				echo '</div>' . "\n";
 				
 				echo '<h3><a href="#">'.__('Custom Field Parameters', 'shortcuts').'</a></h3>' . "\n";
@@ -478,6 +523,8 @@ class Shortcuts_Admin {
 						echo '<input type="text" class="widefat" id="type" name="simple[meta_query][][type]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'type', true))).'" />' . "\n";
 						echo '<span class="description">' . __("(string) - Custom field type. Possible values are 'NUMERIC', 'BINARY', 'CHAR', 'DATE', 'DATETIME', 'DECIMAL', 'SIGNED', 'TIME', 'UNSIGNED'. Default value is 'CHAR'.", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
+					
+					echo '<div class="clear"></div>' . "\n";
 				echo '</div>' . "\n";
 			echo '</div>' . "\n";
 		echo '</div>' . "\n";
@@ -491,6 +538,8 @@ class Shortcuts_Admin {
 			echo '<p>' . "\n";
 				echo '<span class="description">' . __('This field works the same way that the function query_posts(), you can spend the same parameters. The documentation is available on <a href="http://codex.wordpress.org/Function_Reference/query_posts">page query_posts codex</a>.', 'shortcuts') . '</span>';
 			echo '</p>' . "\n";
+			
+			echo '<div class="clear"></div>' . "\n";
 		echo '</div>' . "\n";
 		
 		echo '<input type="hidden" name="_meta_query" value="true" />';

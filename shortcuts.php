@@ -3,7 +3,7 @@
 Plugin Name: Shorcuts
 Version: 2.0
 Plugin URI: http://www.beapi.fr
-Description: Create simple adresses for complex query
+Description: Create addresses simple and SEO friendly to make complex query on your contents. A kind of "Views drupal" for WordPress.
 Author: BeAPI
 Author URI: http://www.beapi.fr
 
@@ -11,8 +11,15 @@ Copyright 2010 - BeAPI Team (technique@beapi.fr)
 
 TODO :
 	Admin
+		Saving
+		Admin
 	Widget
+		List all shortcuts
 	Javascript
+		Add Tax Query
+		Add Meta Query
+	Client
+		Merge WP Query with custom shortcut datas
 */
 
 define( 'SHORT_VERSION', 		'2.0' );
