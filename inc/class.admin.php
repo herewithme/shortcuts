@@ -65,6 +65,7 @@ class Shortcuts_Admin {
 		}
 		
 		if ( isset($_POST['_meta_settings']) && $_POST['_meta_settings'] == 'true' ) {
+			update_post_meta( $object->ID, 'sticky', (isset($_POST['sticky']) ? true : false) );
 			update_post_meta( $object->ID, 'pagination', (isset($_POST['pagination']) ? true : false) );
 			update_post_meta( $object->ID, 'feed', (isset($_POST['feed']) ? true : false) );
 			update_post_meta( $object->ID, 'template', stripslashes($_POST['template']) );
@@ -98,6 +99,11 @@ class Shortcuts_Admin {
 	 * @author Amaury Balmer
 	 */
 	function MetaboxSettings( $post ) {
+		$meta_value = get_post_meta( $post->ID, 'sticky', true );
+		echo '<p>' . "\n";
+			echo '<label><input type="checkbox" name="sticky" value="true" '.checked($meta_value, true, false).' /> '.__('Sticky shortcut post ?', 'shortcuts').'</label><br />' . "\n";
+		echo '</p>' . "\n";
+		
 		$meta_value = get_post_meta( $post->ID, 'pagination', true );
 		echo '<p>' . "\n";
 			echo '<label><input type="checkbox" name="pagination" value="true" '.checked($meta_value, true, false).' /> '.__('Allow pagination ?', 'shortcuts').'</label><br />' . "\n";
@@ -236,27 +242,29 @@ class Shortcuts_Admin {
 				echo '<div>' . "\n";
 					echo '<p>' . "\n";
 						echo '<label for="taxonomy">'.__('taxonomy', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="taxonomy" name="simple[taxonomy]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'taxonomy', true))).'" />' . "\n";
+						echo '<input type="text" class="widefat" id="taxonomy" name="simple[tax_query][][taxonomy]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'taxonomy', true))).'" />' . "\n";
 						echo '<span class="description">' . __('(string) - Taxonomy.', 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
 				
 					echo '<p>' . "\n";
 						echo '<label for="field">'.__('field', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="field" name="simple[field]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'field', true))).'" />' . "\n";
+						echo '<input type="text" class="widefat" id="field" name="simple[tax_query][][field]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'field', true))).'" />' . "\n";
 						echo '<span class="description">' . __('field (string) - Select taxonomy term by (\'id\' or \'slug\')', 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
 					
 					echo '<p>' . "\n";
 						echo '<label for="terms">'.__('terms', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="terms" name="simple[terms]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'terms', true))).'" />' . "\n";
+						echo '<input type="text" class="widefat" id="terms" name="simple[tax_query][][terms]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'terms', true))).'" />' . "\n";
 						echo '<span class="description">' . __('terms (int/string/array) - Taxonomy term(s).', 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
 				
 					echo '<p>' . "\n";
 						echo '<label for="operator">'.__('operator', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="operator" name="simple[operator]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'operator', true))).'" />' . "\n";
+						echo '<input type="text" class="widefat" id="operator" name="simple[tax_query][][operator]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'operator', true))).'" />' . "\n";
 						echo '<span class="description">' . __("operator (string) - Operator to test. Possible values are 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN'.", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
+					
+					echo '<span class="description hide-if-js">' . __('You must save for switch the mode.', 'shortcuts') . '</span>';
 				echo '</div>' . "\n";
 		
 				echo '<h3><a href="#">'.__('Post & Page Parameters', 'shortcuts').'</a></h3>' . "\n";
@@ -308,18 +316,17 @@ class Shortcuts_Admin {
 				echo '<div>' . "\n";
 					echo '<p>' . "\n";
 						echo '<label>'.__('post_type', 'shortcuts').'</label><br />' . "\n";
-						echo '<label style="display:block;"><input type="checkbox" name="simple[post_type][]" value="any" '.checked( in_array('any', (array) get_post_meta($post->ID, 'post_type', true)), true, false ).' /> '.__("'any' - retrieves any type except revisions", 'shortcuts').'</label>' . "\n";
+						echo '<label class="label-lightbox"><input type="checkbox" name="simple[post_type][]" value="any" '.checked( in_array('any', (array) get_post_meta($post->ID, 'post_type', true)), true, false ).' /> '.__("'any' - retrieves any type except revisions", 'shortcuts').'</label>' . "\n";
 						foreach( get_post_types( array(), 'objects' ) as $cpt ) {
-							echo '<label style="display:block;"><input type="checkbox" name="simple[post_type][]" value="'.$cpt->name.'" '.checked( in_array($cpt->name, (array) get_post_meta($post->ID, 'post_type', true)), true, false ).' /> '.$cpt->labels->name.'</label>' . "\n";
+							echo '<label class="label-lightbox"><input type="checkbox" name="simple[post_type][]" value="'.$cpt->name.'" '.checked( in_array($cpt->name, (array) get_post_meta($post->ID, 'post_type', true)), true, false ).' /> '.$cpt->labels->name.'</label>' . "\n";
 						}
 						echo '<span class="description">' . __("(string / array) - use post types. Retrieves posts by Post Types, default value is 'post'", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
 				
 					echo '<p>' . "\n";
 						echo '<label>'.__('post_status', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="post_status" name="simple[post_status][]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'post_status', true))).'" />' . "\n";
 						foreach( get_post_stati( array(), 'objects' ) as $status ) {
-							echo '<label style="display:block;"><input type="checkbox" name="simple[post_status][]" value="'.$status->name.'" '.checked( in_array($status->name, (array) get_post_meta($post->ID, 'post_status', true)), true, false ).' /> '.$status->label.'</label>' . "\n";
+							echo '<label class="label-lightbox"><input type="checkbox" name="simple[post_status][]" value="'.$status->name.'" '.checked( in_array($status->name, (array) get_post_meta($post->ID, 'post_status', true)), true, false ).' /> '.$status->label.'</label>' . "\n";
 						}
 						echo '<span class="description">' . __("(string / array) - use post status. Retrieves posts by Post Status, default value is 'publish'", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
@@ -335,7 +342,11 @@ class Shortcuts_Admin {
 					
 					echo '<p>' . "\n";
 						echo '<label for="nopaging">'.__('nopaging', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="nopaging" name="simple[nopaging]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'nopaging', true))).'" />' . "\n";
+						echo '<select name="simple[nopaging]" id="nopaging" class="widefat">' . "\n";
+							foreach( $this->getTrueFalse() as $type_key => $type_name ) {
+								echo '<option '.selected(get_post_meta($post->ID, 'nopaging', true), $type_key, false).' value="'.esc_attr($type_key).'">'.esc_html($type_name).'</option>' . "\n";
+							}
+						echo '</select>' . "\n";
 						echo '<span class="description">' . __("(bool) - show all posts or use pagination. Default value is 'false', use paging.", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
 				
@@ -360,8 +371,8 @@ class Shortcuts_Admin {
 					echo '<p>' . "\n";
 						echo '<label for="order">'.__('order', 'shortcuts').'</label><br />' . "\n";
 						echo '<select class="widefat" id="order" name="simple[order]">' . "\n";
-							echo '<option value="ASC" '.selected('ASC', get_post_meta($post->ID, 'order', true), false).'>'.__('ASC - ascending order from lowest to highest values (1, 2, 3; a, b, c).', 'shortcuts').'</option>' . "\n";
 							echo '<option value="DESC" '.selected('DESC', get_post_meta($post->ID, 'order', true), false).'>'.__('DESC - descending order from highest to lowest values (3, 2, 1; c, b, a).', 'shortcuts').'</option>' . "\n";
+							echo '<option value="ASC" '.selected('ASC', get_post_meta($post->ID, 'order', true), false).'>'.__('ASC - ascending order from lowest to highest values (1, 2, 3; a, b, c).', 'shortcuts').'</option>' . "\n";
 						echo '</select>' . "\n";
 						echo '<span class="description">' . __("(string) - Designates the ascending or descending order of the 'orderby' parameter.", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
@@ -369,11 +380,11 @@ class Shortcuts_Admin {
 					echo '<p>' . "\n";
 						echo '<label for="orderby">'.__('orderby', 'shortcuts').'</label><br />' . "\n";
 						echo '<select class="widefat" id="orderby" name="simple[orderby]">' . "\n";
+							echo '<option value="date" '.selected('date', get_post_meta($post->ID, 'orderby', true), false).'>'.__("'date' - Order by date. (default, if not set to none)", 'shortcuts').'</option>' . "\n";
 							echo '<option value="none" '.selected('none', get_post_meta($post->ID, 'orderby', true), false).'>'.__("'none' - No order (available with Version 2.8).", 'shortcuts').'</option>' . "\n";
 							echo '<option value="id" '.selected('id', get_post_meta($post->ID, 'orderby', true), false).'>'.__("'id' - Order by post id.", 'shortcuts').'</option>' . "\n";
 							echo '<option value="author" '.selected('author', get_post_meta($post->ID, 'orderby', true), false).'>'.__("'author' - Order by author.", 'shortcuts').'</option>' . "\n";
 							echo '<option value="title" '.selected('title', get_post_meta($post->ID, 'orderby', true), false).'>'.__("'title' - Order by title.", 'shortcuts').'</option>' . "\n";
-							echo '<option value="date" '.selected('date', get_post_meta($post->ID, 'orderby', true), false).'>'.__("'date' - Order by date. (default, if not set to none)", 'shortcuts').'</option>' . "\n";
 							echo '<option value="modified" '.selected('modified', get_post_meta($post->ID, 'orderby', true), false).'>'.__("'modified' - Order by last modified date.", 'shortcuts').'</option>' . "\n";
 							echo '<option value="parent" '.selected('parent', get_post_meta($post->ID, 'orderby', true), false).'>'.__("'parent' - Order by post/page parent id.", 'shortcuts').'</option>' . "\n";
 							echo '<option value="rand" '.selected('rand', get_post_meta($post->ID, 'orderby', true), false).'>'.__("'rand' - Random order.", 'shortcuts').'</option>' . "\n";
@@ -390,7 +401,11 @@ class Shortcuts_Admin {
 				echo '<div>' . "\n";
 					echo '<p>' . "\n";
 						echo '<label for="ignore_sticky_posts">'.__('ignore_sticky_posts', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="ignore_sticky_posts" name="simple[ignore_sticky_posts]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'ignore_sticky_posts', true))).'" />' . "\n";
+						echo '<select name="simple[ignore_sticky_posts]" id="ignore_sticky_posts" class="widefat">' . "\n";
+							foreach( $this->getTrueFalse() as $type_key => $type_name ) {
+								echo '<option '.selected(get_post_meta($post->ID, 'ignore_sticky_posts', true), $type_key, false).' value="'.esc_attr($type_key).'">'.esc_html($type_name).'</option>' . "\n";
+							}
+						echo '</select>' . "\n";
 						echo '<span class="description">' . __("(bool) - ignore sticky posts or not. Default value is 0, don't ignore. Ignore/exclude sticky posts being included at the beginning of posts returned, but the sticky post will still be returned in the natural order of that list of posts returned.", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
 				echo '</div>' . "\n";
@@ -444,22 +459,22 @@ class Shortcuts_Admin {
 				echo '<div>' . "\n";
 					echo '<p>' . "\n";
 						echo '<label for="key">'.__('key', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="key" name="simple[key]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'key', true))).'" />' . "\n";
+						echo '<input type="text" class="widefat" id="key" name="simple[meta_query][][key]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'key', true))).'" />' . "\n";
 						echo '<span class="description">' . __("(string) - Custom field key.", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
 					echo '<p>' . "\n";
 						echo '<label for="value">'.__('value', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="offset" name="simple[offset]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'offset', true))).'" />' . "\n";
+						echo '<input type="text" class="widefat" id="offset" name="simple[meta_query][][offset]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'offset', true))).'" />' . "\n";
 						echo '<span class="description">' . __("(string) - Custom field value.", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
 					echo '<p>' . "\n";
 						echo '<label for="compare">'.__('compare', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="compare" name="simple[compare]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'compare', true))).'" />' . "\n";
+						echo '<input type="text" class="widefat" id="compare" name="simple[meta_query][][compare]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'compare', true))).'" />' . "\n";
 						echo '<span class="description">' . __("(string) - Operator to test. Possible values are '=', '!=', '>', '>=', '<', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN'. Default value is '='.", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
 					echo '<p>' . "\n";
 						echo '<label for="type">'.__('type', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="type" name="simple[type]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'type', true))).'" />' . "\n";
+						echo '<input type="text" class="widefat" id="type" name="simple[meta_query][][type]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'type', true))).'" />' . "\n";
 						echo '<span class="description">' . __("(string) - Custom field type. Possible values are 'NUMERIC', 'BINARY', 'CHAR', 'DATE', 'DATETIME', 'DECIMAL', 'SIGNED', 'TIME', 'UNSIGNED'. Default value is 'CHAR'.", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
 				echo '</div>' . "\n";
@@ -478,6 +493,25 @@ class Shortcuts_Admin {
 		echo '</div>' . "\n";
 		
 		echo '<input type="hidden" name="_meta_query" value="true" />';
+	}
+	
+	/**
+	 * Use for build selector
+	 * 
+	 * @param $key
+	 * @return string/array
+	 */
+	function getTrueFalse( $key = '' ) {
+		$types = array( 
+			'1' => __('True', 'shortcuts'), 
+			'0' => __('False', 'shortcuts')
+		);
+		
+		if ( isset($types[$key]) ) {
+			return $types[$key];
+		}
+		
+		return $types;
 	}
 	
 	/**
