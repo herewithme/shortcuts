@@ -77,6 +77,34 @@ class Shortcuts_Admin {
 		
 		if ( isset($_POST['_meta_query']) && $_POST['_meta_query'] == 'true' ) {
 			update_post_meta( $object->ID, 'query_mode', stripslashes($_POST['query_mode']) );
+			
+			// Clean array dynamic
+			if ( isset($_POST['simple']['meta_query']) ) {
+				foreach( $_POST['simple']['tax_query'] as $k => $tax_query ) {
+					if ( empty($tax_query['taxonomy']) ) {
+						unset($_POST['simple']['tax_query'][$k]);
+					}
+				}
+			}
+			if ( isset($_POST['simple']['meta_query']) ) {
+				foreach( $_POST['simple']['meta_query'] as $k => $meta_query ) {
+					if ( empty($meta_query['key']) ) {
+						unset($_POST['simple']['meta_query'][$k]);
+					}
+				}
+			}
+			
+			// Remove empty value
+			$_POST['simple'] = array_filter($_POST['simple']);
+			
+			// Save all values
+			foreach( $_POST['simple'] as $key => $value ) {
+				if ( is_string($value) )
+					$value = stripslashes($value);
+					
+				update_post_meta( $object->ID, $key, $value );
+			}
+			
 		}
 	}
 	
@@ -105,7 +133,7 @@ class Shortcuts_Admin {
 	function MetaboxSettings( $post ) {
 		$meta_value = get_post_meta( $post->ID, 'sticky', true );
 		echo '<p>' . "\n";
-			echo '<label><input type="checkbox" name="sticky" value="true" '.checked($meta_value, true, false).' /> '.__('Sticky shortcut post ?', 'shortcuts').'</label><br />' . "\n";
+			echo '<label><input type="checkbox" name="sticky" value="true" '.checked($meta_value, true, false).' /> '.__('Sticky the shortcut as first post ?', 'shortcuts').'</label><br />' . "\n";
 		echo '</p>' . "\n";
 		
 		$meta_value = get_post_meta( $post->ID, 'pagination', true );
@@ -122,7 +150,7 @@ class Shortcuts_Admin {
 		echo '<p>' . "\n";
 			echo '<label for="template">'.__('Template files', 'shortcuts').'</label><br />' . "\n";
 			echo '<input type="text" class="widefat" id="template" name="template" value="'.esc_attr(stripslashes($meta_value)).'" />' . "\n";
-			echo '<span class="description">' . __('You can leave this filed empty. By default, t', 'shortcuts') . '</span>';
+			echo '<span class="description">' . __('You can leave this field empty. By default, the file archive-shortcut.php will be used for display content. If this file not exists, WordPress will try to load archive.php, or index.php', 'shortcuts') . '</span>';
 		echo '</p>' . "\n";
 		
 		echo '<input type="hidden" name="_meta_settings" value="true" />';
@@ -541,25 +569,25 @@ class Shortcuts_Admin {
 			
 			echo '<p>' . "\n";
 				echo '<label for="taxonomy">'.__('taxonomy', 'shortcuts').'</label><br />' . "\n";
-				echo '<input type="text" class="widefat" id="taxonomy" name="simple[tax_query][][taxonomy]" value="'.esc_attr(stripslashes($tax_query['taxonomy'])).'" />' . "\n";
+				echo '<input type="text" class="widefat" id="taxonomy" name="simple[tax_query]['.$i.'][taxonomy]" value="'.esc_attr(stripslashes($tax_query['taxonomy'])).'" />' . "\n";
 				echo '<span class="description">' . __('(string) - Taxonomy.', 'shortcuts') . '</span>';
 			echo '</p>' . "\n";
 			
 			echo '<p>' . "\n";
 				echo '<label for="field">'.__('field', 'shortcuts').'</label><br />' . "\n";
-				echo '<input type="text" class="widefat" id="field" name="simple[tax_query][][field]" value="'.esc_attr(stripslashes($tax_query['field'])).'" />' . "\n";
+				echo '<input type="text" class="widefat" id="field" name="simple[tax_query]['.$i.'][field]" value="'.esc_attr(stripslashes($tax_query['field'])).'" />' . "\n";
 				echo '<span class="description">' . __('(string) - Select taxonomy term by (\'id\' or \'slug\')', 'shortcuts') . '</span>';
 			echo '</p>' . "\n";
 			
 			echo '<p>' . "\n";
 				echo '<label for="terms">'.__('terms', 'shortcuts').'</label><br />' . "\n";
-				echo '<input type="text" class="widefat" id="terms" name="simple[tax_query][][terms]" value="'.esc_attr(stripslashes($tax_query['terms'])).'" />' . "\n";
+				echo '<input type="text" class="widefat" id="terms" name="simple[tax_query]['.$i.'][terms]" value="'.esc_attr(stripslashes($tax_query['terms'])).'" />' . "\n";
 				echo '<span class="description">' . __('(int/string/array) - Taxonomy term(s).', 'shortcuts') . '</span>';
 			echo '</p>' . "\n";
 			
 			echo '<p>' . "\n";
 				echo '<label for="operator">'.__('operator', 'shortcuts').'</label><br />' . "\n";
-				echo '<input type="text" class="widefat" id="operator" name="simple[tax_query][][operator]" value="'.esc_attr(stripslashes($tax_query['operator'])).'" />' . "\n";
+				echo '<input type="text" class="widefat" id="operator" name="simple[tax_query]['.$i.'][operator]" value="'.esc_attr(stripslashes($tax_query['operator'])).'" />' . "\n";
 				echo '<span class="description">' . __("(string) - Operator to test. Possible values are 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN'.", 'shortcuts') . '</span>';
 			echo '</p>' . "\n";
 		echo '</div>' . "\n";
@@ -596,22 +624,22 @@ class Shortcuts_Admin {
 			
 			echo '<p>' . "\n";
 				echo '<label for="key">'.__('key', 'shortcuts').'</label><br />' . "\n";
-				echo '<input type="text" class="widefat" id="key" name="simple[meta_query][][key]" value="'.esc_attr(stripslashes($meta_query['key'])).'" />' . "\n";
+				echo '<input type="text" class="widefat" id="key" name="simple[meta_query]['.$i.'][key]" value="'.esc_attr(stripslashes($meta_query['key'])).'" />' . "\n";
 				echo '<span class="description">' . __("(string) - Custom field key.", 'shortcuts') . '</span>';
 			echo '</p>' . "\n";
 			echo '<p>' . "\n";
 				echo '<label for="value">'.__('value', 'shortcuts').'</label><br />' . "\n";
-				echo '<input type="text" class="widefat" id="offset" name="simple[meta_query][][value]" value="'.esc_attr(stripslashes($meta_query['value'])).'" />' . "\n";
+				echo '<input type="text" class="widefat" id="offset" name="simple[meta_query]['.$i.'][value]" value="'.esc_attr(stripslashes($meta_query['value'])).'" />' . "\n";
 				echo '<span class="description">' . __("(string) - Custom field value.", 'shortcuts') . '</span>';
 			echo '</p>' . "\n";
 			echo '<p>' . "\n";
 				echo '<label for="compare">'.__('compare', 'shortcuts').'</label><br />' . "\n";
-				echo '<input type="text" class="widefat" id="compare" name="simple[meta_query][][compare]" value="'.esc_attr(stripslashes($meta_query['compare'])).'" />' . "\n";
+				echo '<input type="text" class="widefat" id="compare" name="simple[meta_query]['.$i.'][compare]" value="'.esc_attr(stripslashes($meta_query['compare'])).'" />' . "\n";
 				echo '<span class="description">' . __("(string) - Operator to test. Possible values are '=', '!=', '>', '>=', '<', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN'. Default value is '='.", 'shortcuts') . '</span>';
 			echo '</p>' . "\n";
 			echo '<p>' . "\n";
 				echo '<label for="type">'.__('type', 'shortcuts').'</label><br />' . "\n";
-				echo '<input type="text" class="widefat" id="type" name="simple[meta_query][][type]" value="'.esc_attr(stripslashes($meta_query['type'])).'" />' . "\n";
+				echo '<input type="text" class="widefat" id="type" name="simple[meta_query]['.$i.'][type]" value="'.esc_attr(stripslashes($meta_query['type'])).'" />' . "\n";
 				echo '<span class="description">' . __("(string) - Custom field type. Possible values are 'NUMERIC', 'BINARY', 'CHAR', 'DATE', 'DATETIME', 'DECIMAL', 'SIGNED', 'TIME', 'UNSIGNED'. Default value is 'CHAR'.", 'shortcuts') . '</span>';
 			echo '</p>' . "\n";
 		echo '</div>' . "\n";
