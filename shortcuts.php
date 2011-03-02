@@ -45,7 +45,6 @@ function Shortcuts_Init() {
 	
 	// Admin
 	if ( is_admin() ) {
-		require( SHORT_DIR . '/inc/class.admin.walker.php' );
 		require( SHORT_DIR . '/inc/class.admin.php' );
 		$shortcuts['admin'] = new Shortcuts_Admin();
 	}

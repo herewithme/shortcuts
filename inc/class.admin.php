@@ -264,7 +264,7 @@ class Shortcuts_Admin {
 						echo '<span class="description">' . __("operator (string) - Operator to test. Possible values are 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN'.", 'shortcuts') . '</span>';
 					echo '</p>' . "\n";
 					
-					echo '<span class="description hide-if-js">' . __('You must save for switch the mode.', 'shortcuts') . '</span>';
+					echo '<span class="description hide-if-js">' . __('You must save for add an another tax query filters.', 'shortcuts') . '</span>';
 				echo '</div>' . "\n";
 		
 				echo '<h3><a href="#">'.__('Post & Page Parameters', 'shortcuts').'</a></h3>' . "\n";
