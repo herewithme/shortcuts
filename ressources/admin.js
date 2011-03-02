@@ -27,16 +27,21 @@ jQuery(document).ready(function() {
 		jQuery(this).parent().click();
 	});
 	
-	// Clone meta query box
-	jQuery("a#add-another-taxo").click(function(event) {
+	// Clone tax meta query box
+	jQuery("a#add-another-tax_query").click(function(event) {
 		event.preventDefault();
-		
-		addMetaQuery();
+		addTaxoMetaQuery();
+	});
+	
+	// Clone tax meta query box
+	jQuery("a#add-another-post_query").click(function(event) {
+		event.preventDefault();
+		addPostMetaQuery();
 	});
 });
 
-function addMetaQuery() {
-	var counter = jQuery(".tax_query_col").size();
+function addTaxoMetaQuery() {
+	var counter = jQuery(".tax_meta_query_col").size();
 	
 	// Display relation field if counter > 1
 	if ( counter > 0 ) {
@@ -47,9 +52,23 @@ function addMetaQuery() {
 	jQuery.ajax({
 		type: "POST",
 		url: ajaxurl,
-		data: "action=shortcut_meta_query&counter="+counter,
+		data: "action=shortcut_taxo_meta_query&counter="+counter,
 		success: function(msg) {
-			jQuery(".tax_query_col:last").after( msg );
+			jQuery(".tax_meta_query_col:last").after( msg );
+		}
+	});
+}
+
+function addPostMetaQuery() {
+	var counter = jQuery(".post_meta_query_col").size();
+	
+	// Make ajax call for get new form
+	jQuery.ajax({
+		type: "POST",
+		url: ajaxurl,
+		data: "action=shortcut_post_meta_query&counter="+counter,
+		success: function(msg) {
+			jQuery(".post_meta_query_col:last").after( msg );
 		}
 	});
 }

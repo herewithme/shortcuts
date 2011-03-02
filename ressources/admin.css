@@ -4,5 +4,7 @@
 
 #poststuff .inside p.subtitle-short { font-weight:700; font-size:13px; }
 
-.tax_query_col { float:left; width:48%; display:block; }
-a#add-another-taxo { float:left; margin:10px 0; }
+.tax_meta_query_col,
+.post_meta_query_col { float:left; width:48%; display:block; }
+a#add-another-tax_query,
+a#add-another-post_query { float:left; margin:10px 0; }

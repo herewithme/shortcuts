@@ -13,7 +13,9 @@ class Shortcuts_Admin {
 	function Shortcuts_Admin() {
 		// Style, Javascript
 		add_action( 'admin_enqueue_scripts', array(&$this, 'addRessources') );
-		add_action( 'wp_ajax_' . 'shortcut_meta_query', array(&$this, 'ajaxBuildMetaQuery' ) );
+		add_action( 'wp_ajax_' . 'shortcut_taxo_meta_query', array(&$this, 'ajaxBuildTaxoMetaQuery' ) );
+		add_action( 'wp_ajax_' . 'shortcut_post_meta_query', array(&$this, 'ajaxBuildPostMetaQuery' ) );
+		
 		
 		// Metadatas
 		add_action( 'add_meta_boxes', array(&$this, 'registerMetaBox'), 999 );
@@ -260,7 +262,7 @@ class Shortcuts_Admin {
 					$i = 0;
 					foreach( $tax_queries as $tax_query ) {
 						$i++;
-						$this->addFormMetaQuery( $i, $tax_query );
+						$this->addFormTaxoMetaQuery( $i, $tax_query );
 					}
 					echo '<div class="clear"></div>' . "\n";
 					
@@ -274,7 +276,7 @@ class Shortcuts_Admin {
 						echo '</p>' . "\n";
 					echo '</div>' . "\n";
 					
-					echo '<a href="#" class="button hide-if-no-js" id="add-another-taxo">' . __('Add an another tax query', 'shortcuts') . '</a>';
+					echo '<a href="#" class="button hide-if-no-js" id="add-another-tax_query">' . __('Add an another tax query', 'shortcuts') . '</a>';
 					echo '<p class="description hide-if-js">' . __('You must save for add an another tax query filters.', 'shortcuts') . '</p>';
 					
 					echo '<div class="clear"></div>' . "\n";
@@ -482,26 +484,24 @@ class Shortcuts_Admin {
 				
 				echo '<h3><a href="#">'.__('Custom Field Parameters', 'shortcuts').'</a></h3>' . "\n";
 				echo '<div>' . "\n";
-					echo '<p>' . "\n";
-						echo '<label for="key">'.__('key', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="key" name="simple[meta_query][][key]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'key', true))).'" />' . "\n";
-						echo '<span class="description">' . __("(string) - Custom field key.", 'shortcuts') . '</span>';
-					echo '</p>' . "\n";
-					echo '<p>' . "\n";
-						echo '<label for="value">'.__('value', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="offset" name="simple[meta_query][][offset]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'offset', true))).'" />' . "\n";
-						echo '<span class="description">' . __("(string) - Custom field value.", 'shortcuts') . '</span>';
-					echo '</p>' . "\n";
-					echo '<p>' . "\n";
-						echo '<label for="compare">'.__('compare', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="compare" name="simple[meta_query][][compare]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'compare', true))).'" />' . "\n";
-						echo '<span class="description">' . __("(string) - Operator to test. Possible values are '=', '!=', '>', '>=', '<', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN'. Default value is '='.", 'shortcuts') . '</span>';
-					echo '</p>' . "\n";
-					echo '<p>' . "\n";
-						echo '<label for="type">'.__('type', 'shortcuts').'</label><br />' . "\n";
-						echo '<input type="text" class="widefat" id="type" name="simple[meta_query][][type]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'type', true))).'" />' . "\n";
-						echo '<span class="description">' . __("(string) - Custom field type. Possible values are 'NUMERIC', 'BINARY', 'CHAR', 'DATE', 'DATETIME', 'DECIMAL', 'SIGNED', 'TIME', 'UNSIGNED'. Default value is 'CHAR'.", 'shortcuts') . '</span>';
-					echo '</p>' . "\n";
+					$meta_queries = get_post_meta($post->ID, 'meta_query', true);
+					if ( $meta_queries == false ) {
+						$meta_queries = array();
+					}
+					
+					// Always add a empty condition
+					$meta_queries[] = array('key' => '', 'value' => '', 'compare' => '', 'type' => '');
+					
+					// Display form for each meta query
+					$i = 0;
+					foreach( $meta_queries as $meta_query ) {
+						$i++;
+						$this->addFormPostMetaQuery( $i, $meta_query );
+					}
+					echo '<div class="clear"></div>' . "\n";
+					
+					echo '<a href="#" class="button hide-if-no-js" id="add-another-post_query">' . __('Add an another post meta query', 'shortcuts') . '</a>';
+					echo '<p class="description hide-if-js">' . __('You must save for add an another post meta query filters.', 'shortcuts') . '</p>';
 					
 					echo '<div class="clear"></div>' . "\n";
 				echo '</div>' . "\n";
@@ -525,38 +525,38 @@ class Shortcuts_Admin {
 	}
 	
 	/**
-	 * Build HTML for meta query condition, used by class form and ajax.
+	 * Build HTML for taxo meta query condition, used by class form and ajax.
 	 *
 	 * @param integer $i 
 	 * @param array $tax_query 
 	 * @return void
 	 * @author Amaury Balmer
 	 */
-	function addFormMetaQuery( $i, $tax_query = null ) {
+	function addFormTaxoMetaQuery( $i, $tax_query = null ) {
 		if ( is_null($tax_query) )
 			$tax_query = array('taxonomy' => '', 'field' => '', 'terms' => '', 'operator' => '');
 			
-		echo '<div class="tax_query_col" id="tax_query-'.$i.'">' . "\n";
+		echo '<div class="tax_meta_query_col" id="tax_query-'.$i.'">' . "\n";
 			echo '<p class="subtitle-short">' . sprintf( __('Condition %d', 'shortcuts'), $i ) . '</p>' . "\n";
-		
+			
 			echo '<p>' . "\n";
 				echo '<label for="taxonomy">'.__('taxonomy', 'shortcuts').'</label><br />' . "\n";
 				echo '<input type="text" class="widefat" id="taxonomy" name="simple[tax_query][][taxonomy]" value="'.esc_attr(stripslashes($tax_query['taxonomy'])).'" />' . "\n";
 				echo '<span class="description">' . __('(string) - Taxonomy.', 'shortcuts') . '</span>';
 			echo '</p>' . "\n";
-
+			
 			echo '<p>' . "\n";
 				echo '<label for="field">'.__('field', 'shortcuts').'</label><br />' . "\n";
 				echo '<input type="text" class="widefat" id="field" name="simple[tax_query][][field]" value="'.esc_attr(stripslashes($tax_query['field'])).'" />' . "\n";
 				echo '<span class="description">' . __('(string) - Select taxonomy term by (\'id\' or \'slug\')', 'shortcuts') . '</span>';
 			echo '</p>' . "\n";
-
+			
 			echo '<p>' . "\n";
 				echo '<label for="terms">'.__('terms', 'shortcuts').'</label><br />' . "\n";
 				echo '<input type="text" class="widefat" id="terms" name="simple[tax_query][][terms]" value="'.esc_attr(stripslashes($tax_query['terms'])).'" />' . "\n";
 				echo '<span class="description">' . __('(int/string/array) - Taxonomy term(s).', 'shortcuts') . '</span>';
 			echo '</p>' . "\n";
-
+			
 			echo '<p>' . "\n";
 				echo '<label for="operator">'.__('operator', 'shortcuts').'</label><br />' . "\n";
 				echo '<input type="text" class="widefat" id="operator" name="simple[tax_query][][operator]" value="'.esc_attr(stripslashes($tax_query['operator'])).'" />' . "\n";
@@ -571,11 +571,63 @@ class Shortcuts_Admin {
 	 * @return void
 	 * @author Amaury Balmer
 	 */
-	function ajaxBuildMetaQuery() {
+	function ajaxBuildTaxoMetaQuery() {
 		if ( !isset($_REQUEST['counter']) || (int) $_REQUEST['counter'] == 0 )
 			die();
 			
-		$this->addFormMetaQuery( $_REQUEST['counter'] + 1, null );
+		$this->addFormTaxoMetaQuery( $_REQUEST['counter'] + 1, null );
+		die();
+	}
+	
+	/**
+	 * Build HTML for post meta query condition, used by class form and ajax.
+	 *
+	 * @param integer $i 
+	 * @param array $meta_query 
+	 * @return void
+	 * @author Amaury Balmer
+	 */
+	function addFormPostMetaQuery( $i, $meta_query = null ) {
+		if ( is_null($meta_query) )
+			$meta_query = array('key' => '', 'value' => '', 'compare' => '', 'type' => '');
+			
+		echo '<div class="post_meta_query_col" id="post_query-'.$i.'">' . "\n";
+			echo '<p class="subtitle-short">' . sprintf( __('Condition %d', 'shortcuts'), $i ) . '</p>' . "\n";
+			
+			echo '<p>' . "\n";
+				echo '<label for="key">'.__('key', 'shortcuts').'</label><br />' . "\n";
+				echo '<input type="text" class="widefat" id="key" name="simple[meta_query][][key]" value="'.esc_attr(stripslashes($meta_query['key'])).'" />' . "\n";
+				echo '<span class="description">' . __("(string) - Custom field key.", 'shortcuts') . '</span>';
+			echo '</p>' . "\n";
+			echo '<p>' . "\n";
+				echo '<label for="value">'.__('value', 'shortcuts').'</label><br />' . "\n";
+				echo '<input type="text" class="widefat" id="offset" name="simple[meta_query][][value]" value="'.esc_attr(stripslashes($meta_query['value'])).'" />' . "\n";
+				echo '<span class="description">' . __("(string) - Custom field value.", 'shortcuts') . '</span>';
+			echo '</p>' . "\n";
+			echo '<p>' . "\n";
+				echo '<label for="compare">'.__('compare', 'shortcuts').'</label><br />' . "\n";
+				echo '<input type="text" class="widefat" id="compare" name="simple[meta_query][][compare]" value="'.esc_attr(stripslashes($meta_query['compare'])).'" />' . "\n";
+				echo '<span class="description">' . __("(string) - Operator to test. Possible values are '=', '!=', '>', '>=', '<', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN'. Default value is '='.", 'shortcuts') . '</span>';
+			echo '</p>' . "\n";
+			echo '<p>' . "\n";
+				echo '<label for="type">'.__('type', 'shortcuts').'</label><br />' . "\n";
+				echo '<input type="text" class="widefat" id="type" name="simple[meta_query][][type]" value="'.esc_attr(stripslashes($meta_query['type'])).'" />' . "\n";
+				echo '<span class="description">' . __("(string) - Custom field type. Possible values are 'NUMERIC', 'BINARY', 'CHAR', 'DATE', 'DATETIME', 'DECIMAL', 'SIGNED', 'TIME', 'UNSIGNED'. Default value is 'CHAR'.", 'shortcuts') . '</span>';
+			echo '</p>' . "\n";
+		echo '</div>' . "\n";
+	}
+	
+	/**
+	 * Function called by AJAX hook for build meta query
+	 *
+	 * @return void
+	 * @author Amaury Balmer
+	 */
+	function ajaxBuildPostMetaQuery() {
+		if ( !isset($_REQUEST['counter']) || (int) $_REQUEST['counter'] == 0 )
+			die();
+			
+		$this->addFormPostMetaQuery( $_REQUEST['counter'] + 1, null );
 		die();
 	}
 	
