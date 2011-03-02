@@ -13,6 +13,7 @@ class Shortcuts_Admin {
 	function Shortcuts_Admin() {
 		// Style, Javascript
 		add_action( 'admin_enqueue_scripts', array(&$this, 'addRessources') );
+		add_action( 'wp_ajax_' . 'shortcut_meta_query', array(&$this, 'ajaxBuildMetaQuery' ) );
 		
 		// Metadatas
 		add_action( 'add_meta_boxes', array(&$this, 'registerMetaBox'), 999 );
@@ -255,45 +256,23 @@ class Shortcuts_Admin {
 					// Always add a empty condition
 					$tax_queries[] = array('taxonomy' => '', 'field' => '', 'terms' => '', 'operator' => '');
 					
+					// Display form for each meta query
 					$i = 0;
 					foreach( $tax_queries as $tax_query ) {
 						$i++;
-						echo '<div class="tax_query_col" id="tax_query-'.$i.'">' . "\n";
-							echo '<p class="subtitle-short">' . sprintf( __('Condition %d', 'shortcuts'), $i ) . '</p>' . "\n";
-						
-							echo '<p>' . "\n";
-								echo '<label for="taxonomy">'.__('taxonomy', 'shortcuts').'</label><br />' . "\n";
-								echo '<input type="text" class="widefat" id="taxonomy" name="simple[tax_query][][taxonomy]" value="'.esc_attr(stripslashes($tax_query['taxonomy'])).'" />' . "\n";
-								echo '<span class="description">' . __('(string) - Taxonomy.', 'shortcuts') . '</span>';
-							echo '</p>' . "\n";
-
-							echo '<p>' . "\n";
-								echo '<label for="field">'.__('field', 'shortcuts').'</label><br />' . "\n";
-								echo '<input type="text" class="widefat" id="field" name="simple[tax_query][][field]" value="'.esc_attr(stripslashes($tax_query['field'])).'" />' . "\n";
-								echo '<span class="description">' . __('(string) - Select taxonomy term by (\'id\' or \'slug\')', 'shortcuts') . '</span>';
-							echo '</p>' . "\n";
-
-							echo '<p>' . "\n";
-								echo '<label for="terms">'.__('terms', 'shortcuts').'</label><br />' . "\n";
-								echo '<input type="text" class="widefat" id="terms" name="simple[tax_query][][terms]" value="'.esc_attr(stripslashes($tax_query['terms'])).'" />' . "\n";
-								echo '<span class="description">' . __('(int/string/array) - Taxonomy term(s).', 'shortcuts') . '</span>';
-							echo '</p>' . "\n";
-
-							echo '<p>' . "\n";
-								echo '<label for="operator">'.__('operator', 'shortcuts').'</label><br />' . "\n";
-								echo '<input type="text" class="widefat" id="operator" name="simple[tax_query][][operator]" value="'.esc_attr(stripslashes($tax_query['operator'])).'" />' . "\n";
-								echo '<span class="description">' . __("(string) - Operator to test. Possible values are 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN'.", 'shortcuts') . '</span>';
-							echo '</p>' . "\n";
-						echo '</div>' . "\n";
+						$this->addFormMetaQuery( $i, $tax_query );
 					}
+					echo '<div class="clear"></div>' . "\n";
 					
-					if ( count($tax_queries) > 1 ) {
+					// Display relation if >1 tax query
+					echo '<div id="relation_tax_query_wrap" style="'.(count($tax_queries) > 1 ? 'display:block;':'display:none;').'">' . "\n";
+						echo '<hr />' . "\n";
 						echo '<p>' . "\n";
 							echo '<label for="relation">'.__('relation', 'shortcuts').'</label><br />' . "\n";
-							echo '<input type="text" class="widefat" id="relation" name="simple[tax_query-relation]" value="'.esc_attr(stripslashes($tax_query['tax_query-relation'])).'" />' . "\n";
+							echo '<input type="text" class="widefat" id="relation" name="simple[tax_query_relation]" value="'.esc_attr(stripslashes(get_post_meta($post->ID, 'tax_query_relation', true))).'" />' . "\n";
 							echo '<span class="description">' . __("(string) - Logical Operators. Possible values are 'OR', 'AND'.", 'shortcuts') . '</span>';
 						echo '</p>' . "\n";
-					}
+					echo '</div>' . "\n";
 					
 					echo '<a href="#" class="button hide-if-no-js" id="add-another-taxo">' . __('Add an another tax query', 'shortcuts') . '</a>';
 					echo '<p class="description hide-if-js">' . __('You must save for add an another tax query filters.', 'shortcuts') . '</p>';
@@ -546,6 +525,61 @@ class Shortcuts_Admin {
 	}
 	
 	/**
+	 * Build HTML for meta query condition, used by class form and ajax.
+	 *
+	 * @param integer $i 
+	 * @param array $tax_query 
+	 * @return void
+	 * @author Amaury Balmer
+	 */
+	function addFormMetaQuery( $i, $tax_query = null ) {
+		if ( is_null($tax_query) )
+			$tax_query = array('taxonomy' => '', 'field' => '', 'terms' => '', 'operator' => '');
+			
+		echo '<div class="tax_query_col" id="tax_query-'.$i.'">' . "\n";
+			echo '<p class="subtitle-short">' . sprintf( __('Condition %d', 'shortcuts'), $i ) . '</p>' . "\n";
+		
+			echo '<p>' . "\n";
+				echo '<label for="taxonomy">'.__('taxonomy', 'shortcuts').'</label><br />' . "\n";
+				echo '<input type="text" class="widefat" id="taxonomy" name="simple[tax_query][][taxonomy]" value="'.esc_attr(stripslashes($tax_query['taxonomy'])).'" />' . "\n";
+				echo '<span class="description">' . __('(string) - Taxonomy.', 'shortcuts') . '</span>';
+			echo '</p>' . "\n";
+
+			echo '<p>' . "\n";
+				echo '<label for="field">'.__('field', 'shortcuts').'</label><br />' . "\n";
+				echo '<input type="text" class="widefat" id="field" name="simple[tax_query][][field]" value="'.esc_attr(stripslashes($tax_query['field'])).'" />' . "\n";
+				echo '<span class="description">' . __('(string) - Select taxonomy term by (\'id\' or \'slug\')', 'shortcuts') . '</span>';
+			echo '</p>' . "\n";
+
+			echo '<p>' . "\n";
+				echo '<label for="terms">'.__('terms', 'shortcuts').'</label><br />' . "\n";
+				echo '<input type="text" class="widefat" id="terms" name="simple[tax_query][][terms]" value="'.esc_attr(stripslashes($tax_query['terms'])).'" />' . "\n";
+				echo '<span class="description">' . __('(int/string/array) - Taxonomy term(s).', 'shortcuts') . '</span>';
+			echo '</p>' . "\n";
+
+			echo '<p>' . "\n";
+				echo '<label for="operator">'.__('operator', 'shortcuts').'</label><br />' . "\n";
+				echo '<input type="text" class="widefat" id="operator" name="simple[tax_query][][operator]" value="'.esc_attr(stripslashes($tax_query['operator'])).'" />' . "\n";
+				echo '<span class="description">' . __("(string) - Operator to test. Possible values are 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN'.", 'shortcuts') . '</span>';
+			echo '</p>' . "\n";
+		echo '</div>' . "\n";
+	}
+	
+	/**
+	 * Function called by AJAX hook for build meta query
+	 *
+	 * @return void
+	 * @author Amaury Balmer
+	 */
+	function ajaxBuildMetaQuery() {
+		if ( !isset($_REQUEST['counter']) || (int) $_REQUEST['counter'] == 0 )
+			die();
+			
+		$this->addFormMetaQuery( $_REQUEST['counter'] + 1, null );
+		die();
+	}
+	
+	/**
 	 * Use for build selector
 	 * 
 	 * @param $key
@@ -553,8 +587,8 @@ class Shortcuts_Admin {
 	 */
 	function getTrueFalse( $key = '' ) {
 		$types = array( 
-			'1' => __('True', 'shortcuts'), 
-			'0' => __('False', 'shortcuts')
+			'0' => __('False', 'shortcuts'),
+			'1' => __('True', 'shortcuts')
 		);
 		
 		if ( isset($types[$key]) ) {
