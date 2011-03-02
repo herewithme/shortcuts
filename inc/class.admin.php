@@ -39,9 +39,10 @@ class Shortcuts_Admin {
 			( $hook_suffix == 'edit.php' && $_GET['post_type'] == SHORT_CPT )
 		) {
 			wp_enqueue_style  ( 'admin-shortcuts', SHORT_URL.'/ressources/admin.css', array(), SHORT_VERSION, 'all' );
-
-			wp_enqueue_script ( 'jquery-ui-accordion', SHORT_URL.'/ressources/jquery.ui.accordion.js', array('jquery', 'jquery-ui-core', 'jquery-ui-widget'), SHORT_VERSION );
-			wp_enqueue_script ( 'admin-shortcuts', SHORT_URL.'/ressources/admin.js', array('jquery'), SHORT_VERSION );
+			
+			wp_enqueue_script ( 'jquery-cookie', SHORT_URL.'/ressources/jquery.cookie.js', array('jquery'), '1.0' );
+			wp_enqueue_script ( 'jquery-ui-accordion', SHORT_URL.'/ressources/jquery.ui.accordion.js', array('jquery', 'jquery-ui-core', 'jquery-ui-widget'), '1.8' );
+			wp_enqueue_script ( 'admin-shortcuts', SHORT_URL.'/ressources/admin.js', array('jquery-cookie', 'jquery-ui-accordion'), SHORT_VERSION );
 			/*
 			wp_localize_script( 'admin-shortcuts', 'translationL10n', array(
 				'successText' => __('This translation is unique, fine...', 'shortcuts'),
