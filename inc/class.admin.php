@@ -119,8 +119,8 @@ class Shortcuts_Admin {
 		if ( !current_user_can('edit_'.SHORT_CPT) )
 			return false;
 		
-		add_meta_box( $post_type.'-settings', __('Settings', 'shortcuts'), array(&$this, 'MetaboxSettings'), $post_type, 'side', 'core' );
-		add_meta_box( $post_type.'-wp_query', __('WP_Query Parameters', 'shortcuts'), array(&$this, 'MetaboxQuery'), $post_type, 'normal', 'high' );
+		add_meta_box( SHORT_CPT.'-settings', __('Settings', 'shortcuts'), array(&$this, 'MetaboxSettings'), SHORT_CPT, 'side', 'core' );
+		add_meta_box( SHORT_CPT.'-wp_query', __('WP_Query Parameters', 'shortcuts'), array(&$this, 'MetaboxQuery'), SHORT_CPT, 'normal', 'high' );
 	}
 	
 	/**
