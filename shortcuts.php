@@ -11,15 +11,14 @@ Copyright 2010 - BeAPI Team (technique@beapi.fr)
 
 TODO :
 	Admin
-		Saving
-		Admin
+		Link preview
 	Widget
 		List all shortcuts
 	Javascript
-		Add Tax Query
-		Add Meta Query
+		
 	Client
 		Merge WP Query with custom shortcut datas
+		body_class
 */
 
 define( 'SHORT_VERSION', 		'2.0' );
