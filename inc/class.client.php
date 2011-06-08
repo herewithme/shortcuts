@@ -43,14 +43,14 @@ class Shortcuts_Client {
 				'parent_item_colon' => __('Parent Shortcut:', 'shortcuts')
 			),
 			'description' 			=> __('Shortcut Plugin', 'shortcuts'),
-			'publicly_queryable' 	=> false,
+			'publicly_queryable' 	=> true,
 			'exclude_from_search' 	=> true,
 			'public' 				=> false,
 			'capability_type' 		=> SHORT_CPT,
 			//'capabilities' 		=> array(),
 			'map_meta_cap'			=> true,
 			'hierarchical' 			=> false,
-			'rewrite' 				=> false,
+			'rewrite' 				=> array( 'slug' => SHORT_CPT ),
 			'query_var' 			=> false,
 			'supports' 				=> array( 'title', 'editor', 'thumbnail', 'excerpt', 'revisions' ),
 			'taxonomies' 			=> array(),
@@ -88,11 +88,11 @@ class Shortcuts_Client {
 	/**
 	 * Add rules from each shortcuts
 	 *
-	 * @param object $wp_rewrite 
+	 * @param object $rewrite 
 	 * @return void
 	 * @author Amaury Balmer
 	 */
-	function addRewriteRules( $wp_rewrite ) {
+	function addRewriteRules( $rewrite ) {
 		global $wpdb;
 		
 		// Get shortcuts
@@ -104,17 +104,17 @@ class Shortcuts_Client {
 		// Add rules for each shortcuts !
 		foreach( $shortcuts as $shortcut ) {
 			$new_rules = array();
-			$new_rules[$shortcut->post_name.'/([^/]+)?$'] = 'index.php?'.SHORT_QUERY.'='. $wp_rewrite->preg_index( 1 );
+			$new_rules[$shortcut->post_name.'/?$'] = 'index.php?'.SHORT_QUERY.'='.$shortcut->post_name;
 			
 			if ( get_post_meta( $shortcut->ID, 'pagination', true ) == true ) 
-				$new_rules[$shortcut->post_name.'/([^/]+)/page/?([0-9]{1,})/?$'] = 'index.php?'.SHORT_QUERY.'='. $wp_rewrite->preg_index( 1 ).'&paged='.$wp_rewrite->preg_index(2);
+				$new_rules[$shortcut->post_name.'/page/?([0-9]{1,})/?$'] = 'index.php?'.SHORT_QUERY.'='.$shortcut->post_name.'&paged='.$rewrite->preg_index(1);
 			
 			if ( get_post_meta( $shortcut->ID, 'feed', true ) == true ) {
-				$new_rules[$shortcut->post_name.'/([^/]+)/feed/(feed|rdf|rss|rss2|atom)/?$'] = 'index.php?'.SHORT_QUERY.'='. $wp_rewrite->preg_index( 1 ).'&feed='.$wp_rewrite->preg_index(2);
-				$new_rules[$shortcut->post_name.'/([^/]+)/(feed|rdf|rss|rss2|atom)/?$'] = 'index.php?'.SHORT_QUERY.'='. $wp_rewrite->preg_index( 1 ).'&feed='.$wp_rewrite->preg_index(2);
+				$new_rules[$shortcut->post_name.'/feed/(feed|rdf|rss|rss2|atom)/?$'] = 'index.php?'.SHORT_QUERY.'='.$shortcut->post_name.'&feed='.$rewrite->preg_index(1);
+				$new_rules[$shortcut->post_name.'/(feed|rdf|rss|rss2|atom)/?$'] = 'index.php?'.SHORT_QUERY.'='.$shortcut->post_name.'&feed='.$rewrite->preg_index(1);
 			}
 			
-			$wp_rewrite->rules = $new_rules + $wp_rewrite->rules;
+			$rewrite->rules = $new_rules + $rewrite->rules;
 		}
 	}
 	
@@ -143,6 +143,9 @@ class Shortcuts_Client {
 		$query->is_shortcut = false;
 		
 		if ( isset($query->query_vars[SHORT_QUERY]) ) {
+			// No canonical for this CPT
+			remove_action('template_redirect', 'redirect_canonical');
+			
 			// Get shortcut data
 			$this->current_shortcut = (int) $wpdb->get_var($wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_name = %s AND post_type = %s", $query->query_vars[SHORT_QUERY], SHORT_CPT ));
 			if ( $this->current_shortcut == 0 ) {
@@ -161,8 +164,10 @@ class Shortcuts_Client {
 			}
 			
 			// Sticky ?
-			// TODO : add filter
-			$sticky = get_post_meta( $this->current_shortcut->ID, 'sticky_shortcut', true );
+			$sticky = (int) get_post_meta( $this->current_shortcut->ID, 'sticky_shortcut', true );
+			if( $sticky == 1 ) {
+				add_filter( 'the_posts', array(&$this, 'prependShortcut'), 10, 2 );
+			}
 			
 			// Get source of query posts
 			$query_mode = get_post_meta( $this->current_shortcut->ID, 'query_mode', true );
@@ -212,6 +217,25 @@ class Shortcuts_Client {
 		$query->is_archive = true;
 	}
 	
+	/**
+	 * Make a nice title for this page
+	 *
+	 * @param array $posts 
+	 * @param object $query 
+	 * @return array
+	 * @author Amaury Balmer
+	 */
+	function prependShortcut( $posts, $query ) {
+		if ( $this->current_shortcut != false ) {
+			array_unshift( $posts, $this->current_shortcut );
+		}
+		
+		return $posts;
+	}
+	
+	/**
+	 * Debug method
+	 */
 	function buildQuery( $query = '' ) {
 		var_dump($query);
 		// exit();
@@ -220,7 +244,6 @@ class Shortcuts_Client {
 	
 	/**
 	 * Make a nice title for this page
-	 * Todo : Remove "Shortcut "
 	 *
 	 * @param string $title 
 	 * @return void
