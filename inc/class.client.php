@@ -174,16 +174,16 @@ class Shortcuts_Client {
 				// TODO: meta query relation !
 			}
 			
+			// Second pass for parse_query
+			remove_action( 'parse_query', array(&$this, 'parseQueryStep1') );
+			add_action( 'parse_query', array(&$this, 'parseQueryStep2') );
+			
 			// Correct query posts
 			if ( !empty($query_posts) ) {
 				$query->query($query_posts);
 			} else {
 				wp_die( __('Shortcut is not configured yet.', 'shortcuts') );
 			}
-			
-			// Second pass for parse_query
-			remove_action( 'parse_query', array(&$this, 'parseQueryStep1') );
-			add_action( 'parse_query', array(&$this, 'parseQueryStep2') );
 			
 			// Build SQL Queries
 			//add_action('posts_request', array(&$this, 'buildQuery'));
